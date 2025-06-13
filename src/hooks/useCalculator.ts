@@ -1,9 +1,10 @@
+
 "use client";
 
 import { useState, useCallback } from 'react';
-import { CalculationEntry, AdvancedFunctionType } from '@/types';
+import type { CalculationEntry, AdvancedFunctionType } from '@/types';
 import { basicEvaluate, formatDisplayNumber } from '@/lib/mathUtils';
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 
 export interface CalculatorState {
   displayValue: string;
@@ -40,6 +41,15 @@ export function useCalculator(
   const [isResultDisplayed, setIsResultDisplayed] = useState<boolean>(false); // Tracks if the current displayValue is a result
 
   const { toast } = useToast();
+
+  // Moved handleClearClick earlier in the file
+  const handleClearClick = useCallback(() => {
+    setDisplayValue("0");
+    setExpression("");
+    setOperator(null);
+    setWaitingForOperand(true);
+    setIsResultDisplayed(false);
+  }, []);
 
   const inputDigit = useCallback((digit: string) => {
     if (displayValue.length >= MAX_DISPLAY_LENGTH && !waitingForOperand && !isResultDisplayed) return;
@@ -140,15 +150,6 @@ export function useCalculator(
 
   }, [operator, waitingForOperand, expression, displayValue, performOperation, onCalculationPerformed, handleClearClick]);
 
-
-  const handleClearClick = useCallback(() => {
-    setDisplayValue("0");
-    setExpression("");
-    setOperator(null);
-    setWaitingForOperand(true);
-    setIsResultDisplayed(false);
-  }, []);
-
   const handleBackspaceClick = useCallback(() => {
     if (isResultDisplayed) { // If result is shown, backspace clears to 0
         handleClearClick();
@@ -214,7 +215,7 @@ export function useCalculator(
         setDisplayValue("Error");
         setIsResultDisplayed(true);
     }
-  }, [displayValue, onCalculationPerformed, toast]);
+  }, [displayValue, onCalculationPerformed, toast, handleClearClick]); // Added handleClearClick to deps if it's used indirectly via error path
   
   const handleParenthesisClick = useCallback((parenthesis: '(' | ')') => {
     // This is a simplified parenthesis handling. True parenthesis logic requires
@@ -272,3 +273,4 @@ export function useCalculator(
     getDisplayValue, // Provide the refined display value
   };
 }
+
